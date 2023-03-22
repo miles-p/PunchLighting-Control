@@ -70,6 +70,6 @@ class OutputManagement:
     def sendPackets(data):
         sender[1].dmx_data = data
 
-DirectOperation.AppendUni(fixture_groups[0],universe_1,50)
+DirectOperation.AppendUni(fixture_groups[0],universe_1,75)
 print(universe_1)
 OutputManagement.sendPackets(universe_1)
