@@ -1,53 +1,7 @@
 import sacn
-import time
-import threading
 
-universe_1 = [
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-]
-fixture_groups = [
-    [],[3,5,7],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[],
-    [],[],[],[],[],[],[],[],[],[]
-]
+universe_1 = [0] * 512
+fixture_groups = [[]] * 100
 
 cue_stack = []
 current_cue = 0
@@ -69,30 +23,39 @@ class ErrorHandler:
 class OutputManagement:
     def SendPackets(data):
         sender[1].dmx_data = data
+    def ThruHandler(inputString):
+        if "thru" in inputString:
+             location = inputString.find("thru")
+             firstNum = int(inputString[:location])
+             lastNum = int(inputString[location+4:])
+             return list(range(firstNum,lastNum+1))
+        else:
+             return None
 
 print("Punch Lighting - PC Control - V1")
 
 while True:
     stepCount = 1
     cmd = input("> ").lower().split()
-    print(cmd)
+    #print(cmd)
     for items in cmd:
          if items == 'at':
               if cmd[stepCount-1].startswith("g"):
+                   print(fixture_groups[int(cmd[stepCount-1][1:])])
                    selection = fixture_groups[int(cmd[stepCount-1][1:])]
-              if "thru" in cmd[stepCount-1]:
-                   location = cmd[stepCount-1].find("thru")
-                   firstNum = int(cmd[stepCount-1][:location])
-                   lastNum = int(cmd[stepCount-1][location+4:])
-                   selection = list(range(firstNum,lastNum+1))
-                   #print(cmd[stepCount-1].find("thru"))
+              elif OutputManagement.ThruHandler(cmd[stepCount-1]) != None:
+                   selection = OutputManagement.ThruHandler(cmd[stepCount-1])
               else:
+                   print(cmd[stepCount-1])
                    selection = [int(cmd[stepCount-1])]
               DirectOperation.AppendUni(selection,universe_1,int(cmd[stepCount+1]))
               #print([int(cmd[stepCount])])
-#    for items in cmd:
-#         if items == 'record':
-#              if cmd[stepCount].startswith("g"):
-#                   #fixture_groups[int(cmd[stepCount][1:])] = 
-                   
+    for items in cmd:
+         if items == 'record':
+              if cmd[stepCount].startswith("g") and OutputManagement.ThruHandler(cmd[stepCount+1]) != None:
+                   #print(OutputManagement.ThruHandler(cmd[stepCount+1]))
+                   fixture_groups[int(cmd[stepCount][1:])] = OutputManagement.ThruHandler(cmd[stepCount+1])
+              elif cmd[stepCount].startswith("g"):
+                   newFixtures = list(cmd[stepCount+1].split(","))
+                   fixture_groups[int(cmd[stepCount][1:])] = [int(x) for x in newFixtures]
     stepCount = stepCount + 1
