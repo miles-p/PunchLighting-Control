@@ -9,9 +9,12 @@ sender.start()  # start the sending thread
 sender.activate_output(1)  # start sending out data in the 1st universe
 sender[1].multicast = True  # set multicast to True
 
+current_show = "NOT SAVED"
+
 class DirectOperation: # This class does some useful stuff, like directly appending the fixture values
     def AppendUni(fixtures, universe, level):
         for singleFixture in fixtures: # Take each fixture and put it to the level
+                print(universe[singleFixture-1])
                 universe[singleFixture-1] = level # Fucking 0-indexing
                 OutputManagement.SendPackets(universe) # BLAST OFF
 
@@ -35,7 +38,7 @@ print("Punch Lighting - PC Control - V1") # Just for shits and gigs, but whateve
 
 while True: # Main loop that does stuff
     stepCount = 1 # Python doesn't have an incremental counter and I want to die
-    cmd = input("> ").lower().split() # Carry the input into a list that I can term-unpack
+    cmd = input("["+current_show+"]"+"> ").lower().split() # Carry the input into a list that I can term-unpack
     for items in cmd: # Unpack by term
          if items == 'at': # If you use the hot-word 'at'
               if cmd[stepCount-1].startswith("g"): # Looks for use of groups
@@ -60,11 +63,19 @@ while True: # Main loop that does stuff
               except FileExistsError: # It already exists
                 print() # Do nothing
               saveFile = open(fileDest+"/"+showName+"/"+"VERSION "+versionID+".plsf", "w") # Save the file with all of this information
-              saveFile.write(','.join(str(e) for e in universe_1)+";\n") # Write in the universes
-              saveFile.write(','.join(str(e) for e in fixture_groups)+";\n") # Write in the fixture groups
+              saveFile.write(','.join(str(e) for e in universe_1)+";") # Write in the universes
+              saveFile.write(','.join(str(e) for e in fixture_groups)+";") # Write in the fixture groups
               saveFile.close() # Close the file
+              current_show = showName+": Version "+versionID
          if items == 'load': # Load the file with the save data
               fileDest = input('Directory to load from:     ') # Directory load
               showName = input('Show Name:         ') # Show Name
               versionID = input('Which version to load:          ') # Version to load
+              saveFile = open(fileDest+"\\"+showName+"\\"+"VERSION "+versionID+".plsf", "r")
+              saveSplit = saveFile.read().split(';')
+              universe_1 = [int(i) for i in saveSplit[0].split(',')]
+              OutputManagement.SendPackets(universe_1)
+              #fixture_groups = saveSplit[1]
+              print(universe_1)
+              current_show = showName+": Version "+versionID
     stepCount = stepCount + 1 # Increment step counter
