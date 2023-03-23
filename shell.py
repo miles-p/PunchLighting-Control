@@ -37,7 +37,7 @@ universe_1 = [
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 ]
 fixture_groups = [
-    [],[],[],[],[],[],[],[],[],[],
+    [],[3,5,7],[],[],[],[],[],[],[],[],
     [],[],[],[],[],[],[],[],[],[],
     [],[],[],[],[],[],[],[],[],[],
     [],[],[],[],[],[],[],[],[],[],
@@ -48,12 +48,13 @@ fixture_groups = [
     [],[],[],[],[],[],[],[],[],[],
     [],[],[],[],[],[],[],[],[],[]
 ]
+
 cue_stack = []
+current_cue = 0
 sender = sacn.sACNsender(fps=30)  # provide an IP-Address to bind to if you want to send multicast packets from a specific interface
 sender.start()  # start the sending thread
 sender.activate_output(1)  # start sending out data in the 1st universe
 sender[1].multicast = True  # set multicast to True
-
 
 class DirectOperation:
     def AppendUni(fixtures, universe, level):
@@ -72,16 +73,26 @@ class OutputManagement:
 print("Punch Lighting - PC Control - V1")
 
 while True:
-    stepCount = 0
+    stepCount = 1
     cmd = input("> ").lower().split()
     print(cmd)
     for items in cmd:
          if items == 'at':
-              if cmd[stepCount].startswith("g"):
-                   selection = fixture_groups[int(cmd[stepCount][1:])]    #[cmd[stepCount][1:]]
-                   #print(fixture_groups[int(cmd[stepCount][1:])],int(cmd[stepCount][1:]))
+              if cmd[stepCount-1].startswith("g"):
+                   selection = fixture_groups[int(cmd[stepCount-1][1:])]
+              if "thru" in cmd[stepCount-1]:
+                   location = cmd[stepCount-1].find("thru")
+                   firstNum = int(cmd[stepCount-1][:location])
+                   lastNum = int(cmd[stepCount-1][location+4:])
+                   selection = list(range(firstNum,lastNum+1))
+                   #print(cmd[stepCount-1].find("thru"))
               else:
-                   selection = [int(cmd[stepCount])]
-              DirectOperation.AppendUni(selection,universe_1,int(cmd[stepCount+2]))
+                   selection = [int(cmd[stepCount-1])]
+              DirectOperation.AppendUni(selection,universe_1,int(cmd[stepCount+1]))
               #print([int(cmd[stepCount])])
+#    for items in cmd:
+#         if items == 'record':
+#              if cmd[stepCount].startswith("g"):
+#                   #fixture_groups[int(cmd[stepCount][1:])] = 
+                   
     stepCount = stepCount + 1
