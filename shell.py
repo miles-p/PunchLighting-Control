@@ -1,10 +1,9 @@
 import sacn
+import os
 
 universe_1 = [0] * 512
 fixture_groups = [[]] * 100
 
-cue_stack = []
-current_cue = 0
 sender = sacn.sACNsender(fps=30)  # provide an IP-Address to bind to if you want to send multicast packets from a specific interface
 sender.start()  # start the sending thread
 sender.activate_output(1)  # start sending out data in the 1st universe
@@ -50,7 +49,6 @@ while True:
                    selection = [int(cmd[stepCount-1])]
               DirectOperation.AppendUni(selection,universe_1,int(cmd[stepCount+1]))
               #print([int(cmd[stepCount])])
-    for items in cmd:
          if items == 'record':
               if cmd[stepCount].startswith("g") and OutputManagement.ThruHandler(cmd[stepCount+1]) != None:
                    #print(OutputManagement.ThruHandler(cmd[stepCount+1]))
@@ -58,4 +56,20 @@ while True:
               elif cmd[stepCount].startswith("g"):
                    newFixtures = list(cmd[stepCount+1].split(","))
                    fixture_groups[int(cmd[stepCount][1:])] = [int(x) for x in newFixtures]
+         if items == 'save':
+              fileDest = input('Directory to save to:     ')
+              showName = input('Show Name:         ')
+              versionID = input('Which version to save as:          ')
+              try:
+                os.mkdir(fileDest+"/"+showName)
+              except FileExistsError:
+                print("")
+              saveFile = open(fileDest+"/"+showName+"/"+"VERSION "+versionID+".plsf", "w")
+              saveFile.write(','.join(str(e) for e in universe_1)+";\n")
+              saveFile.write(','.join(str(e) for e in fixture_groups)+";\n")
+              saveFile.close()
+         if items == 'load':
+              fileDest = input('Directory to load from:     ')
+              showName = input('Show Name:         ')
+              versionID = input('Which version to load:          ')
     stepCount = stepCount + 1
